@@ -1,41 +1,31 @@
-## 📘 `README.md` – Hands-on LLMs with Industry-Standard Tools
-
-```markdown
 # 🧠 Hands-On LLMs: Fine-Tuning, Prompt Engineering, RAG & Agents
 
-Welcome to a practical, modular, and cutting-edge project repository for building **real-world applications with Large Language Models (LLMs)**. This repo showcases hands-on workflows and architectures using **industry-standard tools and frameworks** for:
-
-- ✅ Fine-tuning LLMs
-- ✍️ Prompt engineering
-- 🔎 Retrieval-Augmented Generation (RAG)
-- 🤖 Agentic workflows and tool use
+Welcome to a practical, modular project repository focused on **building real-world applications using Large Language Models (LLMs)**. This repo offers hands-on workflows and example pipelines leveraging **industry-standard tools and frameworks** such as Hugging Face, LangChain, and more.
 
 ---
 
 ## 🔧 Tech Stack & Key Libraries
 
-This project uses a curated set of production-grade libraries:
+This project uses a carefully curated set of production-ready libraries:
 
-| Purpose                      | Tools/Packages |
-|-----------------------------|----------------|
+| Purpose                      | Tools / Packages                                          |
+|-----------------------------|----------------------------------------------------------|
 | LLM Inference & Fine-Tuning | `transformers`, `trl`, `peft`, `bitsandbytes`, `accelerate` |
-| Embeddings & Retrieval      | `sentence-transformers`, `faiss-cpu`, `bertopic`, `annoy`, `mteb` |
-| Prompt Engineering          | `langchain`, `langchain-community`, `langchain-openai`, `setfit` |
-| Agents & Tool Use           | `langchain`, `duckduckgo-search`, custom toolkits |
+| Embeddings & Retrieval       | `sentence-transformers`, `faiss-cpu`, `bertopic`, `annoy`, `mteb` |
+| Prompt Engineering           | `langchain`, `langchain-community`, `setfit`             |
+| Agents & Tool Use            | `langchain`, `duckduckgo-search`, custom toolkits         |
 | Evaluation                  | `evaluate`, `seqeval`, `scikit-learn`, `nltk`, `matplotlib` |
-| Cloud APIs & Integration    | `openai`, `cohere` |
-| Environment                 | `jupyterlab`, `ipywidgets` |
-| Data Handling               | `pandas`, `numpy`, `datasets` |
-
----
-
-
+| Cloud APIs & Integration     | `openai`, `cohere`                                        |
+| Environment & Notebook       | `jupyterlab`, `ipywidgets`                                |
+| Data Handling               | `pandas`, `numpy`, `datasets`                             |
 
 ---
 
 ## ⚙️ Getting Started
 
-### 🔨 Step 1: Create a virtual environment using `uv`
+### Step 1: Create and activate your virtual environment
+
+Using [`uv`](https://github.com/ultraviolet-dev/uv):
 
 ```bash
 uv venv myenv
@@ -43,20 +33,20 @@ source myenv/bin/activate
 uv pip install -r requirements.txt
 ````
 
-> Optional: If using `conda`, you can run:
->
-> ```bash
-> conda env create -f environment.yml
-> conda activate llm-hands-on
-> ```
+Alternatively, with Conda:
 
-### 💡 Step 2: Launch JupyterLab
+```bash
+conda env create -f environment.yml
+conda activate llm-hands-on
+```
+
+### Step 2: Launch JupyterLab
 
 ```bash
 jupyter lab
 ```
 
-### 🔁 Step 3: Rebuild `llama_cpp_python` with BLAS support (optional)
+### Step 3: (Optional) Rebuild `llama_cpp_python` with BLAS support for faster inference
 
 ```bash
 CMAKE_ARGS="-DLLAMA_BLAS=ON" uv pip install --force-reinstall llama_cpp_python==0.2.78
@@ -64,33 +54,33 @@ CMAKE_ARGS="-DLLAMA_BLAS=ON" uv pip install --force-reinstall llama_cpp_python==
 
 ---
 
-## 💻 Use Cases Covered
+## 💻 Included Use Cases & Notebooks
 
-| # | Topic                     | Notebook                      |
-| - | ------------------------- | ----------------------------- |
-| 1 | Prompt Engineering        | `01_prompt_engineering.ipynb` |
-| 2 | Supervised Fine-Tuning    | `02_finetuning.ipynb`         |
-| 3 | Retrieval-Augmented Gen   | `03_rag_pipeline.ipynb`       |
-| 4 | Agents & Tool Integration | `04_agents_tool_use.ipynb`    |
+| # | Topic                                | Notebook                      |
+| - | ------------------------------------ | ----------------------------- |
+| 1 | Prompt Engineering                   | `01_prompt_engineering.ipynb` |
+| 2 | Supervised Fine-Tuning               | `02_finetuning.ipynb`         |
+| 3 | Retrieval-Augmented Generation (RAG) | `03_rag_pipeline.ipynb`       |
+| 4 | Agents & Tool Integration            | `04_agents_tool_use.ipynb`    |
 
 ---
 
-## 🧠 Goals of the Project
+## 🧠 Project Goals
 
-* Build reusable, testable, modular components
-* Demonstrate open-source and commercial LLMs
-* Cover end-to-end workflows from data to deployment
-* Follow best practices used in real production systems
+* Build reusable, modular, and testable components
+* Demonstrate working with both open-source and commercial LLMs
+* Provide end-to-end workflows from data processing to model deployment
+* Illustrate best practices in production-grade LLM applications
 
 ---
 
 ## 📦 Dependencies
 
-Install dependencies from:
+Install dependencies via:
 
-* `requirements.txt` — For `uv` or `pip`
-* `environment.yml` — For `conda`
-* `requirements.lock.txt` — For locked version installs
+* `requirements.txt` — For `uv` or `pip` installs
+* `environment.yml` — For Conda environments
+* `requirements.lock.txt` — Locked dependency versions for reproducibility
 
 ---
 
@@ -105,3 +95,4 @@ Contributions, issues, and pull requests are welcome! Please fork the repo and o
 MIT License © 2025 Ex Machina
 
 ```
+
