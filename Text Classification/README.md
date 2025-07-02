@@ -134,7 +134,3 @@ Built with ❤️ using Hugging Face Transformers, OpenAI, and Scikit-Learn.
 ## 📄 License
 
 MIT License.
-
-```
-
-
