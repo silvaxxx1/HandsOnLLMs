@@ -1,113 +1,128 @@
-# 🧠 Unified LLM Text Classification Pipeline
+## 🧠 Unified LLM Text Classification Pipeline
 
-A modular, end-to-end project for text classification using Large Language Models (LLMs) — supporting **fine-tuning**, **feature extraction**, **zero-shot**, and **few-shot prompting** in a single unified pipeline.
+A modular, end-to-end project for text classification using Large Language Models (LLMs) — supporting **fine-tuning**, **feature extraction**, **zero-shot**, and **few-shot prompting** from a single CLI interface using `uv`.
 
 ---
 
 ## ✨ Features
 
-✅ Fine-tuning with Hugging Face Transformers  
-✅ Feature extraction using LLM embeddings + classical ML  
-✅ Zero-shot classification via NLI models  
-✅ Few-shot prompting via OpenAI / instruct models  
-✅ Unified command-line interface  
-✅ Ready for deployment with Gradio
+✅ Fine-tuning with Hugging Face Transformers
+✅ Feature extraction using LLM embeddings + classical ML
+✅ Embedding-based classification with SentenceTransformers
+✅ Zero-shot prompting with OpenAI Chat Models (GPT-3.5, GPT-4)
+✅ Unified command-line interface via `uv`
+✅ Built-in evaluation metrics + confusion matrix
+✅ **Interactive web demo via Gradio app**
 
 ---
 
 ## 📂 Project Structure
 
 ```
-
-text\_classification\_llm/
-├── config.py
-├── run\_pipeline.py            # Entry point for all modes
+text_classification_llm/
+├── config.py                    # Global config
+├── run_pipeline.py             # Main entry point (CLI with uv)
 ├── src/
-│   ├── data.py                # Load and tokenize datasets
-│   ├── features.py            # Extract LLM embeddings
-│   ├── train\_features.py      # Train ML on embeddings
-│   ├── train\_finetune.py      # Fine-tune transformer models
-│   ├── zero\_shot.py           # Zero-shot via BART/Roberta NLI
-│   ├── few\_shot.py            # Few-shot prompting via GPT
-│   ├── evaluate.py            # Evaluation helpers
-├── models/                    # Saved models
-├── outputs/                   # Logs, plots, reports
+│   ├── train_finetune.py       # Fine-tune transformer models
+│   ├── train_features.py       # Train ML classifier on hidden states
+│   ├── embedding_pipeline.py   # SentenceTransformer embeddings + ML
+│   ├── zero_shot.py            # Zero-shot via OpenAI GPT
+│   ├── eval.py                 # Evaluation utilities
+│   └── __init__.py
 ├── app/
-│   └── gradio\_app.py          # Web UI (optional)
-├── requirements.txt
+│   └── gradio_app.py           # Interactive web UI for emotion classification
+├── outputs/                    # Logs, predictions, confusion matrix
+├── models/                     # Fine-tuned model checkpoints
+├── pyproject.toml              # uv-based dependency management
 └── README.md
-
-````
-
----
-
-## 📊 Supported Classification Modes
-
-| Mode             | Description                                         | File             |
-|------------------|-----------------------------------------------------|------------------|
-| ✅ Fine-Tuning     | Train a transformer model on labeled data          | `train_finetune.py` |
-| ✅ Feature-Based   | Extract embeddings → ML classifier                 | `train_features.py` |
-| ✅ Zero-Shot       | Use NLI model to classify without training         | `zero_shot.py`      |
-| ✅ Few-Shot        | Prompt LLM with examples → predict class           | `few_shot.py`       |
+```
 
 ---
 
+## 📊 Classification Modes
 
-## ▶️ Run Any Mode
+| Mode              | Description                            | Script                  |
+| ----------------- | -------------------------------------- | ----------------------- |
+| ✅ Fine-Tuning     | Train transformer on labeled data      | `train_finetune.py`     |
+| ✅ Feature-Based   | Extract BERT features → ML classifier  | `train_features.py`     |
+| ✅ Embedding-Based | SentenceTransformers → classifier      | `embedding_pipeline.py` |
+| ✅ Zero-Shot       | Few-shot GPT-style prompt → prediction | `zero_shot.py`          |
+
+---
+
+## ▶️ Run the Pipeline with `uv`
 
 ```bash
-# Fine-tune BERT on dataset
-python run_pipeline.py --mode finetune
+# Fine-tune BERT on emotion dataset
+uv run run_pipeline.py --mode finetune
 
-# Use embeddings + Logistic Regression
-python run_pipeline.py --mode feature
+# Use BERT hidden states + logistic regression
+uv run run_pipeline.py --mode feature
 
-# Use zero-shot classification (no training)
-python run_pipeline.py --mode zero
+# Use SentenceTransformer embeddings + ML classifier
+uv run run_pipeline.py --mode embedding
 
-# Use few-shot prompting (OpenAI GPT)
-python run_pipeline.py --mode fewshot
+# Run zero-shot classification with OpenAI GPT (requires API key)
+uv run run_pipeline.py --mode zero --openai_api_key sk-...
+```
+
+---
+
+## 🖥️ Run the Interactive Gradio Web App
+
+Try the emotion classifier live in your browser! The app classifies input text into emotions like joy, sadness, anger, and more — displaying colored badges with confidence scores.
+
+```bash
+python app/gradio_app.py
+```
+
+* Visit the local URL printed (e.g., `http://localhost:7860/`) or the public link (if `share=True` is enabled).
+* Enter any text and see instant emotion predictions with friendly colored pills.
+* Perfect for quick demos or user testing without any coding.
+
+---
+
+## ⚙️ CLI Options
+
+You can override config values at runtime:
+
+```bash
+uv run run_pipeline.py --mode finetune --epochs 5 --batch_size 16 --model_name distilbert-base-uncased
+```
+
+For zero-shot:
+
+```bash
+uv run run_pipeline.py --mode zero --openai_api_key sk-... --model_name gpt-4
 ```
 
 ---
 
 ## 📈 Evaluation
 
-* Accuracy, F1-score (feature & finetune modes)
+All training/inference modes output:
+
+* Accuracy, F1, Precision, Recall
 * Per-class metrics
-* Confusion matrix in `outputs/`
+* Confusion matrix plot saved to `outputs/`
 
 ---
 
-## 🧪 Example Dataset
+## 🧪 Default Dataset
 
-Uses [dair-ai/emotion](https://huggingface.co/datasets/dair-ai/emotion) by default.
-
-Classes:
+We use [dair-ai/emotion](https://huggingface.co/datasets/dair-ai/emotion) by default:
 
 ```
 ["sadness", "joy", "love", "anger", "fear", "surprise"]
 ```
 
-You can change dataset in `config.py` or plug in your own.
+To use a custom dataset, change `config.py` or plug in your own Hugging Face dataset.
 
 ---
 
-## 🌐 Optional: Run Web App
+## 🧠 Few-Shot Prompt Format (Zero-Shot)
 
-```bash
-python app/gradio_app.py
-```
-
-Then visit `http://localhost:7860/` to test your model live.
-
----
-
-## 🧠 Few-Shot Prompting Logic
-
-Uses OpenAI Chat models (GPT-3.5, GPT-4) to classify text by example:
-
-**Example Prompt:**
+Prompt format used with GPT models:
 
 ```
 Classify the following sentence into one of: [joy, sadness, anger, fear, love, surprise]
@@ -122,15 +137,44 @@ Example: I just got promoted!
 Label:
 ```
 
+Predicted class is parsed from GPT response.
+
 ---
 
+## 📦 Setup with `uv`
 
-## 🧠 Credits
+Install `uv` if you haven’t:
 
-Built with ❤️ using Hugging Face Transformers, OpenAI, and Scikit-Learn.
+```bash
+curl -Ls https://astro.build/install | bash
+```
+
+Then install dependencies:
+
+```bash
+uv venv
+source .venv/bin/activate
+uv pip install -r requirements.txt
+```
+
+Or use `pyproject.toml` with:
+
+```bash
+uv pip install -e .
+```
+
+---
+
+## ❤️ Built With
+
+* Hugging Face Transformers
+* OpenAI API (GPT models)
+* Scikit-learn
+* Gradio interactive app
+* `uv` for blazing-fast dependency management
 
 ---
 
 ## 📄 License
 
-MIT License.
+MIT License
