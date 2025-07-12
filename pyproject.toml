@@ -6,9 +6,12 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "accelerate>=1.8.1",
+    "cohere>=5.16.1",
     "datasets>=3.6.0",
     "evaluate>=0.4.4",
+    "faiss",
     "gradio>=5.35.0",
+    "ipykernel>=6.29.5",
     "matplotlib>=3.10.3",
     "openai>=1.93.0",
     "scikit-learn>=1.7.0",
