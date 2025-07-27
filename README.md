@@ -1,8 +1,3 @@
-Thanks! Based on your updated directory structure and your vision, here's a **refined, modular, and scalable top-level `README.md`** for the full `Hands_on_LLM` repository. This version clearly separates projects and integrates your new **"Local RAG"** as the **second project**, following the **Text Classification** one. It also references notebooks and subdirectories cleanly.
-
----
-
-````markdown
 # 🧠 Hands-On LLMs: Fine-Tuning, Prompt Engineering, RAG & Agents
 
 Welcome to **HandsOnLLM**, a modular, real-world project suite for mastering **Large Language Models (LLMs)** through practical use cases. Each subproject demonstrates a different aspect of working with LLMs — from prompt engineering and fine-tuning to lightweight local RAG and agent workflows.
