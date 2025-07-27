@@ -7,11 +7,17 @@ A modular, end-to-end project for text classification using Large Language Model
 ## ✨ Features
 
 ✅ Fine-tuning with Hugging Face Transformers
+
 ✅ Feature extraction using LLM embeddings + classical ML
+
 ✅ Embedding-based classification with SentenceTransformers
+
 ✅ Zero-shot prompting with OpenAI Chat Models (GPT-3.5, GPT-4)
+
 ✅ Unified command-line interface via `uv`
+
 ✅ Built-in evaluation metrics + confusion matrix
+
 ✅ **Interactive web demo via Gradio app**
 
 ---
