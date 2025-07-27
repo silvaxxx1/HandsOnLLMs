@@ -1,0 +1,83 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.so
+*.egg
+*.egg-info/
+*.log
+
+# Notebooks
+.ipynb_checkpoints/
+*.ipynb~    # temporary notebook files
+
+# Environment / Build
+.env
+.venv
+env/
+venv/
+myenv/
+dist/
+build/
+*.lock
+*.bak
+*.swp
+
+# VSCode / IDEs
+.vscode/
+.idea/
+
+# Jupyter & IPython
+*.checkpoint
+.ipython/
+.jupyter/
+*.ipynb_checkpoints/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Data files (OPTIONAL: skip large inputs, uncomment if needed)
+# *.csv
+# *.tsv
+# *.json
+# *.parquet
+# data/
+# datasets/
+
+# Model checkpoints / outputs
+checkpoints/
+outputs/
+*.pt
+*.pth
+*.bin
+*.h5
+*.ckpt
+*.onnx
+
+# Cache folders
+.cache/
+huggingface/
+datasets/
+__pycache__/
+.faiss/
+index_store/
+
+# llama.cpp compiled binaries (optional)
+*.dll
+*.dylib
+*.exe
+*.o
+*.a
+
+# LangChain cache
+lc_cache/
+
+# PDF or large docs (optional)
+*.pdf
+
+# Logs
+*.log
+*.out
+*.err
+logs/
