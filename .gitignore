@@ -1,83 +1,77 @@
 # Python
 __pycache__/
 *.py[cod]
-*.pyo
 *.so
 *.egg
 *.egg-info/
+*.pyd
+*.pyo
+*.pkl
 *.log
 
-# Notebooks
-.ipynb_checkpoints/
-*.ipynb~    # temporary notebook files
-
-# Environment / Build
+# Environment and packaging
 .env
-.venv
+.venv/
 env/
 venv/
-myenv/
-dist/
-build/
+.llama-env/
+.cache/
 *.lock
-*.bak
-*.swp
+*.toml.lock
 
-# VSCode / IDEs
+# VS Code / IDE / OS
 .vscode/
 .idea/
-
-# Jupyter & IPython
-*.checkpoint
-.ipython/
-.jupyter/
-*.ipynb_checkpoints/
-
-# System files
 .DS_Store
 Thumbs.db
 
-# Data files (OPTIONAL: skip large inputs, uncomment if needed)
-# *.csv
-# *.tsv
-# *.json
-# *.parquet
-# data/
-# datasets/
+# Notebooks
+.ipynb_checkpoints/
 
-# Model checkpoints / outputs
-checkpoints/
-outputs/
+# LLM models and embeddings
+*.gguf
 *.pt
-*.pth
 *.bin
-*.h5
-*.ckpt
 *.onnx
+*.ckpt
+*.npy
+*.npz
+*.h5
+*.weights
 
-# Cache folders
-.cache/
-huggingface/
-datasets/
-__pycache__/
-.faiss/
-index_store/
+# Data + assets
+*.csv
+*.tsv
+*.parquet
+*.jsonl
+*.db
+*.sqlite
+assets/
+data/
+notebooks/assets/
 
-# llama.cpp compiled binaries (optional)
-*.dll
-*.dylib
-*.exe
-*.o
-*.a
+# Temporary / experiment files
+*.bak
+*.tmp
+*.swp
 
-# LangChain cache
-lc_cache/
-
-# PDF or large docs (optional)
+# Output files
 *.pdf
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# Build
+build/
+dist/
+*.egg-info/
+.eggs/
+*.spec
 
 # Logs
 *.log
-*.out
-*.err
 logs/
+
+# uv tool cache
+uv.lock

@@ -1,97 +1,150 @@
-# RAG-From-Scratch
+# Local RAG from Scratch
 
-A simple **Retrieval-Augmented Generation (RAG)** system built from the ground up — no heavy frameworks, just clean Python code.
+A lightweight, modular **Retrieval-Augmented Generation (RAG)** pipeline designed to run efficiently on local machines — especially CPU-bound environments — without relying on heavy frameworks or cloud services.
 
----
+This project builds a functional backbone for RAG by combining:
 
-## Project Overview
-
-This project demonstrates how to build a local RAG pipeline step-by-step, starting from:
-
-* Loading and chunking documents (e.g., books)
-* Generating embeddings for text chunks
-* Indexing chunks using FAISS for fast similarity search
-* Querying with an LLM to generate answers grounded in retrieved content
-* Interactive Gradio UI for easy usage
+- Document loading and chunking
+- Vector embedding with customizable models
+- FAISS-based similarity search
+- Local LLM inference powered by [TinyLlama](https://github.com/johnsmith0031/tiny-llama) using `llama.cpp`
+- Optional interactive Gradio UI (coming soon)
 
 ---
 
-## Why Build Your Own RAG?
+## Why Build Your Own Local RAG?
 
-* Understand every component inside out
-* Customize to your specific use case
-* Run locally on modest hardware
-* Avoid vendor lock-in and cloud costs
+- **Full control:** Understand and customize every stage of the pipeline  
+- **Resource efficient:** Optimized for CPU and modest hardware (e.g., laptops, low-end servers)  
+- **No vendor lock-in:** Run fully offline without cloud costs or dependencies  
+- **Extensible:** Swap embedding models, chunking strategies, or LLMs as needed  
 
 ---
 
-## Directory Structure
+## Project Structure
 
-```plaintext
-rag-from-scratch/
-├── app/
-│   ├── embedder.py         # Embedding code  
-│   ├── retriever.py        # FAISS index and search  
-│   ├── reader.py           # Load and split text  
-│   ├── llm.py              # LLM query wrapper  
-│   └── rag_pipeline.py     # Orchestrates all components  
-├── chunks/                 # Processed text chunks  
-├── data/                   # Place your books here  
-├── embeddings/             # Stores vector indexes  
-├── models/                 # Downloaded ML models  
-├── ui/
-│   └── gradio_app.py       # Web UI  
-├── requirements.txt        # Dependencies  
-├── setup.sh                # Setup script  
-└── README.md               # This file  
 ```
 
+Local-RAG/
+├── app.py                     # Gradio web UI (optional)
+├── README.md                  # This file
+└── src/
+├── assets/                # Raw PDFs, chunk CSVs, embeddings
+├── data/                  # Document loading & chunking logic
+├── embedding/             # Embedding models and storage
+├── inference/             # LLM loading and query handling
+├── rag\_pipline.py         # Modular CLI pipeline orchestrator
+├── retrieval/             # FAISS index and similarity search
+└── tinyllama-1.1b-chat-v1.0.Q5\_K\_M.gguf  # TinyLlama quantized model for local inference
+
+````
+
++------------+      +------------+      +--------------+      +-----------+
+|  Upload &  | ---> |  Data      | ---> |  Embedding   | ---> |  Inference |
+|  Load PDF  |      |  Pipeline  |      |  Pipeline    |      |  (TinyLlama)|
++------------+      +------------+      +--------------+      +-----------+
+                                       |                           |
+                                       v                           v
+                                 +--------------+          +----------------+
+                                 |  Chunked     |          |  Answers to    |
+                                 |  Text        |          |  User Queries  |
+                                 +--------------+          +----------------+
+
+
+
+
+###  Add your documents
+
+Place your PDF files inside `src/assets/` or provide a direct URL when running the pipeline.
+
+###  Run the pipeline via CLI
+
+You can run each stage individually or run the full pipeline sequentially.
+
+#### Example CLI commands:
+
+* **Run only the data pipeline (download, chunk):**
+
+  ```bash
+  python src/rag_pipline.py data \
+    --url http://example.com/file.pdf \
+    --save-path ./src/assets/raw.pdf \
+    --chunk-size 512 \
+    --show-stats
+  ```
+
+* **Run only embedding:**
+
+  ```bash
+  python src/rag_pipline.py embed \
+    --model-key sentence-transformers/all-MiniLM-L6-v2
+  ```
+
+* **Run only inference:**
+
+  ```bash
+  python src/rag_pipline.py inf --device cpu
+  ```
+
+* **Run the full pipeline:**
+
+  ```bash
+  python src/rag_pipline.py all \
+    --url http://example.com/file.pdf \
+    --save-path ./src/assets/raw.pdf \
+    --chunk-size 512 \
+    --show-stats \
+    --model-key sentence-transformers/all-MiniLM-L6-v2 \
+    --device cpu
+  ```
+
 ---
 
-## Getting Started
+## About TinyLlama and llama.cpp
 
-1. **Clone the repo**
-
-   ```bash
-   git clone <repo_url>
-   cd rag-from-scratch
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   bash setup.sh
-   ```
-
-3. **Add your book/document**
-   Place your `.txt` file(s) inside the `data/` folder.
-
-4. **Create chunks & embeddings**
-   Run the reader and embedder scripts (or the full pipeline) to process your data.
-
-5. **Start the UI**
-
-   ```bash
-   python ui/gradio_app.py
-   ```
-
-   Open the displayed URL in your browser.
+This project leverages [TinyLlama](https://github.com/johnsmith0031/tiny-llama), a lightweight quantized LLM model, loaded and queried locally through the [llama.cpp](https://github.com/ggerganov/llama.cpp) runtime. This combination enables fast, offline inference without a GPU — perfect for CPU-limited environments.
 
 ---
 
-## Notes
+## Configuration & Optimization
 
-* Designed to run on modest hardware (e.g., laptops with 16GB RAM + decent GPU)
-* Use smaller LLM models for local inference (e.g., `distilgpt2` or similar)
-* Extensible — swap in your own embedding model, vector store, or LLM
+* **Chunk Size:** Adjust `--chunk-size` to balance chunk granularity and embedding/inference speed. Smaller chunks can improve retrieval relevance but increase processing time.
+* **Embedding Models:** Easily swap embedding models via `--model-key`. Use smaller, faster models for CPU environments or larger models if GPU available.
+* **Inference Device:** Use `--device cpu` to run on CPU or `--device cuda` if GPU and CUDA available.
+* **Chunk Stats:** Enable `--show-stats` to visualize chunk length distributions for data diagnostics.
+* **Caching:** Embeddings and chunks are saved in `src/assets/` to avoid redundant computation.
+
+---
+
+## Interactive Web UI (Coming Soon)
+
+A user-friendly Gradio interface will allow uploading PDFs and querying directly from the browser with real-time response from the local RAG pipeline.
 
 ---
 
-## Next Steps
+## Future Improvements
 
-* Improve chunking strategy (e.g., semantic chunking)
-* Add support for multiple documents
-* Experiment with larger LLMs or quantized models
-* Add caching and persistence
+* Support multi-document ingestion and indexing
+* Enhanced chunking (semantic or topic-based)
+* More advanced caching and persistence layers
+* Additional embedding and LLM model support
+* Performance profiling and further optimization for very low-resource devices
 
 ---
+
+## License
+
+MIT License
+
+---
+
+## Acknowledgments
+
+Inspired by open-source RAG research and implementations, thanks to the open-source community for embedding models, FAISS, llama.cpp, and TinyLlama.
+
+---
+
+**Build your own RAG pipeline tailored for local environments — fully transparent, modular, and efficient.**
+Happy exploring! 🚀
+
+```
