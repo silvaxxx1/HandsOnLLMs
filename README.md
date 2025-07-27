@@ -82,16 +82,6 @@ Hands_on_LLM/
 
 ---
 
-## 🔬 Notebooks Summary
-
-| Notebook                    | Description                                     |
-| --------------------------- | ----------------------------------------------- |
-| `Prompt_Engineering.ipynb`  | Prompt tuning, templates, & few-shot examples   |
-| `Text_Classification.ipynb` | Classification workflows (zero-shot, fine-tune) |
-| `semantic_search.ipynb`     | Document similarity search using embeddings     |
-| `simple-local-rag.ipynb`    | End-to-end RAG pipeline using llama.cpp         |
-
----
 
 ## 🚀 Quick Start
 
