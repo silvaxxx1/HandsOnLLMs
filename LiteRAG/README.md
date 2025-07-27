@@ -1,4 +1,4 @@
-# Local RAG from Scratch
+# LiteRAG : Local RAG from Scratch
 
 A lightweight, modular **Retrieval-Augmented Generation (RAG)** pipeline designed to run efficiently on local machines — especially CPU-bound environments — without relying on heavy frameworks or cloud services.
 
