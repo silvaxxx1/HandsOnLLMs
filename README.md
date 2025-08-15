@@ -114,7 +114,7 @@ Create an issue or fork the repo and open a PR.
 
 ## 📄 License
 
-MIT License © 2025 **Ex Machina**
+MIT License © 2025 
 
 ```
 
