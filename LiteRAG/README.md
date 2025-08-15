@@ -61,6 +61,14 @@ Place your PDF files inside `src/assets/` or provide a direct URL when running t
 
 You can run each stage individually or run the full pipeline sequentially.
 
+
+### Quick Start : 
+run at the root directory of the project:
+
+```bash
+ python -m src.inference.inference      # Start the inference 
+  python -m src.inference.fero_gradio      # Start the Gradio UI (optional)
+
 #### Example CLI commands:
 
 * **Run only the data pipeline (download, chunk):**

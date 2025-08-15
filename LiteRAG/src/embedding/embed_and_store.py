@@ -1,13 +1,13 @@
 import os
 import pandas as pd
 import numpy as np
-from config import (
+from src.config import (
     CHUNKS_CSV_PATH,
     get_embeddings_csv_path,
     get_embeddings_pickle_path,
     DEFAULT_EMBEDDING_MODEL_KEY,
 )
-from .load_embed_model import load_embedding_model
+from src.embedding.load_embed_model import load_embedding_model
 
 
 def embed_texts(texts: list[str], model) -> np.ndarray:
@@ -66,5 +66,4 @@ def main(model_key: str = DEFAULT_EMBEDDING_MODEL_KEY):
 
 
 if __name__ == "__main__":
-    # Change the model_key here to switch models
     main(model_key=DEFAULT_EMBEDDING_MODEL_KEY)

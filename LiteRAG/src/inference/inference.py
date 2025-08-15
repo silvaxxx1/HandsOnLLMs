@@ -3,16 +3,17 @@ import sys
 import time
 import torch
 import pandas as pd
-from config import (
+
+from src.config import (
     BASE_DIR,
     CHUNKS_CSV_PATH,
     DEFAULT_EMBEDDING_MODEL_KEY,
     DEFAULT_GENERATION_MODEL_KEY,
     get_embeddings_pickle_path,
 )
-from embedding.load_embed_model import load_embedding_model
+from src.embedding.load_embed_model import load_embedding_model
 from .prompt_builder import build_prompt
-from retrieval.search import compute_similarity
+from src.retrieval.search import compute_similarity
 from llama_cpp import Llama  # llama.cpp python bindings
 
 # Helper context manager to suppress stdout/stderr
@@ -74,7 +75,7 @@ def generate_with_llama_cpp(llama_model, prompt, max_tokens=128, temperature=0.7
 
 
 def main():
-    device = "cpu"
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"[System] Using device: {device}")
 
     # Load embedding model
@@ -100,7 +101,7 @@ def main():
     df = pd.read_csv(CHUNKS_CSV_PATH)
     metadata = df.to_dict(orient="records")
 
-    from config import SUPPORTED_GENERATION_MODELS, DEFAULT_GENERATION_MODEL_KEY
+    from src.config import SUPPORTED_GENERATION_MODELS, DEFAULT_GENERATION_MODEL_KEY
     gen_model_cfg = SUPPORTED_GENERATION_MODELS.get(DEFAULT_GENERATION_MODEL_KEY)
     llama_model_path = gen_model_cfg.get("path") if gen_model_cfg else None
 
