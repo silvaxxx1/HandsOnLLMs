@@ -79,3 +79,28 @@ tinyllama-*.gguf
 assets/
 *.npy
 *.csv
+
+# Large model files
+*.gguf
+*.bin
+*.pt
+*.pth
+*.safetensors
+*.onnx
+
+# Model checkpoints
+models/finetuned/
+checkpoint-*/
+*.ckpt
+
+# Cache and data
+*.npy
+*.csv
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Assets
+assets/
+*.pdf
