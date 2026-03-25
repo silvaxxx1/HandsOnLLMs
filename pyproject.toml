@@ -28,3 +28,8 @@ dependencies = [
     "torch>=2.7.1",
     "transformers>=4.54.1",
 ]
+
+[tool.uv.workspace]
+members = [
+    "N_LiteRAG",
+]

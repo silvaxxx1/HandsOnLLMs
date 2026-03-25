@@ -1,0 +1,10 @@
+# LiteRAG Dependencies
+pymupdf>=1.23.0          # PDF processing
+spacy>=3.7.0             # Text chunking with sentencizer
+sentence-transformers>=2.2.0  # Embedding models
+torch>=2.0.0             # Backend for sentence-transformers
+llama-cpp-python>=0.2.0  # Local LLM inference
+pandas>=2.0.0            # CSV handling for chunks
+requests>=2.31.0         # PDF downloading
+tqdm>=4.66.0             # Progress bars
+huggingface-hub>=0.20.0  # Model downloading (optional)
