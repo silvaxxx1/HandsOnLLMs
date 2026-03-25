@@ -104,3 +104,27 @@ venv/
 # Assets
 assets/
 *.pdf
+
+# Large model files
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.gguf
+
+# Checkpoints
+checkpoint-*/
+models/finetuned/
+
+# Data files
+*.npy
+*.csv
+*.pdf
+
+# Notebook outputs
+.ipynb_checkpoints/
+*.ipynb
+
+# Cache
+__pycache__/
+*.pyc
