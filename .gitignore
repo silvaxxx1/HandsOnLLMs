@@ -75,3 +75,7 @@ logs/
 
 # uv tool cache
 uv.lock
+tinyllama-*.gguf
+assets/
+*.npy
+*.csv
