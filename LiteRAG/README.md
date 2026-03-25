@@ -1,6 +1,3 @@
-Here's the complete updated README with all modifications:
-
-```markdown
 # LiteRAG
 
 **Local Retrieval-Augmented Generation, built from scratch.**
