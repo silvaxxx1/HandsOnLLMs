@@ -5,7 +5,7 @@ Inspired by Andrej Karpathy's microGPT:
   "This is the full algorithmic content of what is needed.
    Everything else is just efficiency."
 
-This file is the complete RAG algorithm — ~130 lines, zero hidden
+This file is the complete RAG algorithm — ~150 lines, zero hidden
 abstractions, every step visible and commented. Read it top to bottom
 and you will understand exactly how RAG works.
 
@@ -18,15 +18,26 @@ The algorithm, in one breath:
   inject them into a prompt → generate an answer with a local LLM.
 """
 
-import os, re, torch, numpy as np
+import os
+import re
+import sys
+import warnings
+import torch
+import numpy as np
 from spacy.lang.en import English
 from sentence_transformers import SentenceTransformer
 from llama_cpp import Llama
 
+# ─── SUPPRESS WARNINGS ──────────────────────────────────────────────────────
+# Suppress CUDA initialization warning (harmless - just falls back to CPU)
+warnings.filterwarnings("ignore", category=UserWarning, module="torch.cuda")
+# Suppress future warnings from transformers
+warnings.filterwarnings("ignore", category=FutureWarning)
+
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
 # Every knob in one place. Change these and nothing else.
 
-PDF_PATH    = "/home/silva/SILVA.AI/Projects/Hands_on_LLM/LiteRAG/assets/raw.pdf"          # point to your PDF
+DOC_PATH    = "/home/silva/SILVA.AI/Projects/Hands_on_LLM/LiteRAG/assets/raw.pdf"  # .pdf or .txt
 CHUNK_SIZE  = 10     # sentences per chunk — the most important RAG hyperparameter
                      # too small → chunks lose context. too large → retrieval is imprecise.
 EMBED_MODEL = "all-MiniLM-L6-v2"   # 384-dim vectors. fast. strong. CPU + GPU.
@@ -34,24 +45,64 @@ TOP_K       = 5      # chunks handed to the LLM. more = richer context, longer p
 LLM_PATH    = "/home/silva/SILVA.AI/Projects/Hands_on_LLM/LiteRAG/tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf"
 N_CTX       = 2048   # LLM context window in tokens
 N_THREADS   = 8      # set to your CPU core count
-
+TEMPERATURE = 0.2    # 0 = deterministic, 1 = creative
+MAX_TOKENS  = 512    # max tokens to generate
 
 # ─── STAGE 1 · LOAD ───────────────────────────────────────────────────────────
-# RAG starts with your document. We extract raw text page by page using
-# PyMuPDF. Page numbers are kept so every answer can be traced to a source.
+# RAG starts with your document. We extract raw text from PDF or TXT.
+# Page numbers are kept so every answer can be traced to a source.
 
 def load(path: str) -> list[dict]:
-    import fitz
-    pages = []
-    for i, page in enumerate(fitz.open(path), 1):
-        text = page.get_text()
-        if text.strip():                              # skip blank / image-only pages
-            pages.append({
-                "page": i,
-                "text": re.sub(r"\s+", " ", text).strip(),   # collapse whitespace
-            })
-    print(f"[load]  {len(pages)} pages")
-    return pages
+    """Load text from PDF or TXT. Returns list of pages with text."""
+    
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"File not found: {path}")
+    
+    if path.lower().endswith('.pdf'):
+        try:
+            import fitz
+        except ImportError:
+            raise ImportError("PyMuPDF (fitz) is required for PDFs. Install with: pip install pymupdf")
+        
+        pages = []
+        for i, page in enumerate(fitz.open(path), 1):
+            text = page.get_text()
+            if text.strip():
+                pages.append({
+                    "page": i,
+                    "text": re.sub(r"\s+", " ", text).strip(),
+                })
+        print(f"[load]  {len(pages)} pages from PDF")
+        return pages
+    
+    elif path.lower().endswith(('.txt', '.md', '.csv')):
+        with open(path, 'r', encoding='utf-8') as f:
+            text = re.sub(r"\s+", " ", f.read()).strip()
+        
+        # For large text files, split into pseudo-pages
+        if len(text) > 10000:
+            page_size = 5000  # characters per pseudo-page
+            pages = []
+            for i in range(0, len(text), page_size):
+                pages.append({
+                    "page": i // page_size + 1,
+                    "text": text[i:i+page_size]
+                })
+            print(f"[load]  {len(pages)} pseudo-pages from TXT")
+            return pages
+        else:
+            print(f"[load]  1 page from TXT ({len(text)} chars)")
+            return [{"page": 1, "text": text}]
+    
+    else:
+        # Try to read as text anyway
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                text = re.sub(r"\s+", " ", f.read()).strip()
+            print(f"[load]  1 page from unknown format ({len(text)} chars)")
+            return [{"page": 1, "text": text}]
+        except:
+            raise ValueError(f"Unsupported file: {path}. Use .pdf or .txt")
 
 
 # ─── STAGE 2 · CHUNK ──────────────────────────────────────────────────────────
@@ -66,17 +117,23 @@ def load(path: str) -> list[dict]:
 # of ~2× more chunks — a valid production trade-off not needed here.
 
 def chunk(pages: list[dict], size: int = CHUNK_SIZE) -> list[dict]:
+    """Split pages into sentence-based chunks."""
     nlp = English()
     nlp.add_pipe("sentencizer")   # lightweight — no full NLP model needed
     chunks, idx = [], 0
 
     for page in pages:
         sents = [s.text.strip() for s in nlp(page["text"]).sents if s.text.strip()]
+        if not sents:
+            continue
+            
         for i in range(0, len(sents), size):
+            chunk_text = " ".join(sents[i : i + size])
             chunks.append({
                 "id":   idx,
                 "page": page["page"],
-                "text": " ".join(sents[i : i + size]),
+                "text": chunk_text,
+                "sentences": len(sents[i : i + size])  # metadata for debugging
             })
             idx += 1
 
@@ -93,8 +150,14 @@ def chunk(pages: list[dict], size: int = CHUNK_SIZE) -> list[dict]:
 # CRITICAL: query and chunks MUST use the SAME model — same vector space.
 
 def embed(chunks: list[dict], model: SentenceTransformer) -> np.ndarray:
+    """Convert all chunks to embedding vectors."""
     texts = [c["text"] for c in chunks]
-    vecs  = model.encode(texts, show_progress_bar=True, convert_to_numpy=True)
+    vecs = model.encode(
+        texts, 
+        show_progress_bar=True, 
+        convert_to_numpy=True,
+        batch_size=32  # process in batches for memory efficiency
+    )
     print(f"[embed] shape={vecs.shape}  ({vecs.shape[1]}-dim vectors)")
     return vecs.astype(np.float32)   # shape: (num_chunks, 384)
 
@@ -116,7 +179,8 @@ def embed(chunks: list[dict], model: SentenceTransformer) -> np.ndarray:
 def retrieve(query: str, model: SentenceTransformer,
              vecs: np.ndarray, chunks: list[dict],
              k: int = TOP_K) -> list[dict]:
-
+    """Retrieve top-K chunks most similar to the query."""
+    
     q_vec = model.encode(query, convert_to_tensor=True)    # (384,) — GPU if available
     c_vec = torch.tensor(vecs).to(q_vec.device)            # (N, 384) — follow query
 
@@ -127,7 +191,7 @@ def retrieve(query: str, model: SentenceTransformer,
     )
     top_scores, top_idx = torch.topk(scores, k=min(k, len(chunks)))
 
-    return [{**chunks[i], "score": round(s, 4)}
+    return [{**chunks[i], "score": round(float(s), 4)}
             for s, i in zip(top_scores.tolist(), top_idx.tolist())]
 
 
@@ -139,8 +203,9 @@ def retrieve(query: str, model: SentenceTransformer,
 # use different formats — always match the template to the model.
 
 def build_prompt(query: str, hits: list[dict]) -> str:
+    """Build a prompt with the retrieved context."""
     context = "\n\n".join(
-        f"[Context {i+1} — Page {h['page']}]\n{h['text']}"
+        f"[Context {i+1} — Page {h['page']} (score: {h['score']})]\n{h['text']}"
         for i, h in enumerate(hits)
     )
     return (
@@ -161,8 +226,14 @@ def build_prompt(query: str, hits: list[dict]) -> str:
 # 0.2 is the sweet spot for grounded document Q&A.
 
 def generate(llm: Llama, prompt: str) -> str:
-    out = llm(prompt, max_tokens=512, temperature=0.2,
-              stop=["</s>", "<|user|>"], echo=False)
+    """Generate an answer using the LLM."""
+    out = llm(
+        prompt, 
+        max_tokens=MAX_TOKENS, 
+        temperature=TEMPERATURE,
+        stop=["</s>", "<|user|>"], 
+        echo=False
+    )
     return out["choices"][0]["text"].strip()
 
 
@@ -171,38 +242,88 @@ def generate(llm: Llama, prompt: str) -> str:
 # ask()    → stages 4–6. Fast. Run per query.
 
 def setup():
+    """Initialize the RAG system. Run once."""
     print("\n── microrag · setup ──────────────────────────────────────────")
-    pages  = load(PDF_PATH)
+    print(f"Document: {DOC_PATH}")
+    print(f"Chunk size: {CHUNK_SIZE} sentences")
+    print(f"Embedding model: {EMBED_MODEL}")
+    print(f"LLM: {LLM_PATH}")
+    print("── loading document ───────────────────────────────────────────")
+    
+    pages = load(DOC_PATH)
     chunks = chunk(pages, CHUNK_SIZE)
-    model  = SentenceTransformer(EMBED_MODEL)
-    vecs   = embed(chunks, model)
-    llm    = Llama(model_path=LLM_PATH, n_ctx=N_CTX,
-                   n_threads=N_THREADS, use_mlock=True, verbose=False)
+    
+    print("── embedding chunks ──────────────────────────────────────────")
+    model = SentenceTransformer(EMBED_MODEL)
+    vecs = embed(chunks, model)
+    
+    print("── loading LLM ───────────────────────────────────────────────")
+    llm = Llama(
+        model_path=LLM_PATH, 
+        n_ctx=N_CTX,
+        n_threads=N_THREADS, 
+        use_mlock=True, 
+        verbose=False
+    )
+    
     print("── ready ─────────────────────────────────────────────────────\n")
     return model, vecs, chunks, llm
 
 
 def ask(query: str, model, vecs, chunks, llm) -> str:
-    hits   = retrieve(query, model, vecs, chunks)
+    """Ask a question and get an answer."""
+    hits = retrieve(query, model, vecs, chunks)
     prompt = build_prompt(query, hits)
     answer = generate(llm, prompt)
 
-    # printing hits is crucial — it shows exactly what evidence the LLM saw
+    # Printing hits is crucial — it shows exactly what evidence the LLM saw
     print(f"\n  query  : {query}")
     for h in hits:
-        print(f"  hit    : page={h['page']}  score={h['score']}  "
-              f"{h['text'][:70]}…")
+        preview = h['text'][:70] + "…" if len(h['text']) > 70 else h['text']
+        print(f"  hit    : page={h['page']}  score={h['score']}  {preview}")
     print(f"  answer : {answer}\n")
     return answer
+
+
+# ─── INTERACTIVE LOOP ─────────────────────────────────────────────────────────
+
+def interactive_loop(model, vecs, chunks, llm):
+    """Run an interactive Q&A session."""
+    print("Interactive Q&A. Type 'quit' to exit.\n")
+    print("Tip: Try questions about the document content.")
+    
+    while True:
+        try:
+            q = input("question > ").strip()
+            if not q:
+                continue
+            if q.lower() in {"quit", "exit", "q"}:
+                print("Goodbye!")
+                break
+            ask(q, model, vecs, chunks, llm)
+        except KeyboardInterrupt:
+            print("\nGoodbye!")
+            break
+        except Exception as e:
+            print(f"Error: {e}")
+            print("Please try another question.")
 
 
 # ─── ENTRY POINT ──────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    model, vecs, chunks, llm = setup()
-
-    while True:
-        q = input("question > ").strip()
-        if not q: continue
-        if q.lower() in {"quit", "exit", "q"}: break
-        ask(q, model, vecs, chunks, llm)
+    try:
+        model, vecs, chunks, llm = setup()
+        interactive_loop(model, vecs, chunks, llm)
+    except KeyboardInterrupt:
+        print("\nInterrupted. Goodbye!")
+        sys.exit(0)
+    except Exception as e:
+        print(f"\nFatal error: {e}")
+        print("\nTroubleshooting tips:")
+        print("  1. Check that DOC_PATH points to a valid file")
+        print("  2. Ensure all dependencies are installed:")
+        print("     pip install pymupdf spacy sentence-transformers torch llama-cpp-python")
+        print("     python -m spacy download en_core_web_sm")
+        print("  3. Check that LLM_PATH points to a valid .gguf model file")
+        sys.exit(1)
