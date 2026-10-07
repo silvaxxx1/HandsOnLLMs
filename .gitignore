@@ -47,7 +47,6 @@ Thumbs.db
 *.db
 *.sqlite
 assets/
-data/
 notebooks/assets/
 
 # Temporary / experiment files
